@@ -1,4 +1,6 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import React from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/Authcontext';
 import Layout from '../components/Layout';
 import Dashboard from '../views/Dashboard';
 import Client from '../views/Client';
@@ -14,37 +16,53 @@ import OrderRequest from '../views/orders/orderRequest';
 import Login from '../views/auth/Login';
 import Register from '../views/auth/Register';
 
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <Layout />,
-    children: [
-      { index: true, element: <Dashboard /> },
-      { path: 'dashboard', element: <Dashboard /> },
-      { path: 'clients', element: <Client /> },
-      { path: 'suppliers', element: <Supplier /> },
-      { path: 'inventory', element: <Inventory /> },
-      { path: 'machinery', element: <Machinery /> },
-      { path: 'reports', element: <Reports /> },
-      { path: 'employees', element: <Employee /> },
-      { path: 'attendance', element: <Attendance /> },
-      { path: 'payroll', element: <Payroll /> },
-      { path: 'client-orders', element: <ClientOrder /> },
-      { path: 'order-requests', element: <OrderRequest /> },
-    ],
-  },
-  {
-    path: '/login',
-    element: <Login />,
-  },
-  {
-    path: '/register',
-    element: <Register />,
-  },
-]);
+// Protected route component
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return <div className="loading-screen">Loading...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+};
 
 const AppRouter = () => {
-  return <RouterProvider router={router} />;
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      
+      <Route 
+        path="/" 
+        element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Dashboard />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="clients" element={<Client />} />
+        <Route path="suppliers" element={<Supplier />} />
+        <Route path="inventory" element={<Inventory />} />
+        <Route path="machinery" element={<Machinery />} />
+        <Route path="reports" element={<Reports />} />
+        <Route path="employees" element={<Employee />} />
+        <Route path="attendance" element={<Attendance />} />
+        <Route path="payroll" element={<Payroll />} />
+        <Route path="client-orders" element={<ClientOrder />} />
+        <Route path="order-requests" element={<OrderRequest />} />
+      </Route>
+      
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 };
 
 export default AppRouter;
